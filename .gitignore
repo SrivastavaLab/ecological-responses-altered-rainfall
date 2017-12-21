@@ -12,7 +12,8 @@ ms/Paper1vers2.0CoAuthorEdits/.*
 ms/Paper1vers2.0CoAuthorEdits/
 *.docx
 *.pptx
-*.rds
+#*.rds
+test_gamma.rds
 Rscripts_archived/
 Edd\'s\ multifunctional/
 .*protocol.*
