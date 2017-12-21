@@ -1,0 +1,18 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+.Rapp.history
+*httr*
+*.lnk
+figure/bromeliad\ photos/.*
+figure/bromeliad\ photos/
+ms/Paper1vers2.0CoAuthorEdits/.*
+ms/Paper1vers2.0CoAuthorEdits/
+*.docx
+*.pptx
+*.rds
+Rscripts_archived/
+Edd\'s\ multifunctional/
+.*protocol.*
