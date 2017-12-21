@@ -120,7 +120,7 @@ dev.off()
 
 #Appendix plot
 
-png(file = "HistoricalRain.png", units = "px", width = 7780, height=7380, res=1440)
+png(file = "figure/HistoricalRain.png", units = "px", width = 7780, height=7380, res=1440)
 
 plot1b<-ggplot()+
   geom_point(data=site_treatment_data, aes(x=intended.mu, y=intended.k, fill=site), size=2, alpha=1/4, na.rm=TRUE, aes(color=site))+ 

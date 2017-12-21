@@ -216,6 +216,24 @@ aic.hydro<-function(y, formula, family, dataset)
   print(aicset<-model.sel(m0, m1, m2, m3, m4, m5, m6, m7, m8, m17,m18,m19,m20,m21,m22,m23,m24))
 }
 
+aic.hydro.notemp<-function(y, formula, family, dataset)
+{
+  m0<-glm(formula, family=family, data = dataset)
+  m1<-glm(y~log(maxvol)+site+cv.depth, family=family, data = dataset)
+  m2<-glm(y~log(maxvol)+site+prop.overflow.days, family=family, data = dataset)
+  m3<-glm(y~log(maxvol)+site+prop.driedout.days, family=family, data = dataset)
+  m4<-glm(y~log(maxvol)+site+mean.depth, family=family, data = dataset)
+  m5<-glm(y~log(maxvol)+site+long_dry, family=family, data = dataset)
+  m6<-glm(y~log(maxvol)+site+last_wet, family=family, data = dataset)
+  m17<-glm(y~log(maxvol)+site*cv.depth, family=family, data = dataset)
+  m18<-glm(y~log(maxvol)+site*prop.overflow.days, family=family, data = dataset)
+  m19<-glm(y~log(maxvol)+site*prop.driedout.days, family=family, data = dataset)
+  m20<-glm(y~log(maxvol)+site*mean.depth, family=family, data = dataset)
+  m21<-glm(y~log(maxvol)+site*long_dry, family=family, data = dataset)
+  m22<-glm(y~log(maxvol)+site*last_wet, family=family, data = dataset)
+  print(aicset<-model.sel(m0, m1, m2, m3, m4, m5, m6, m17,m18,m19,m20,m21,m22))
+}
+
 aic.hydro.pure<-function(y, family, dataset)
 {
   m0<-glm(y~log(maxvol)+site, family=family, data = dataset)
@@ -267,6 +285,25 @@ aic.hydro.nb<-function(y, formula, dataset)
   m24<-glm.nb(y~log(maxvol)+site*change_mean_temp,  data = dataset)
   print(aicset<-model.sel(m0, m1, m2, m3, m4, m5, m6, m7, m8, m17,m18,m19,m20,m21,m22,m23,m24))
 }
+
+aic.hydro.nb.notemp<-function(y, formula, dataset)
+{
+  m0<-glm.nb(formula,data = dataset)
+  m1<-glm.nb(y~log(maxvol)+site+cv.depth,  data = dataset)
+  m2<-glm.nb(y~log(maxvol)+site+prop.overflow.days, data = dataset)
+  m3<-glm.nb(y~log(maxvol)+site+prop.driedout.days,  data = dataset)
+  m4<-glm.nb(y~log(maxvol)+site+mean.depth,  data = dataset)
+  m5<-glm.nb(y~log(maxvol)+site+long_dry,  data = dataset)
+  m6<-glm.nb(y~log(maxvol)+site+last_wet,  data = dataset)
+  m17<-glm.nb(y~log(maxvol)+site*cv.depth,  data = dataset)
+  m18<-glm.nb(y~log(maxvol)+site*prop.overflow.days, data = dataset)
+  m19<-glm.nb(y~log(maxvol)+site*prop.driedout.days,  data = dataset)
+  m20<-glm.nb(y~log(maxvol)+site*mean.depth,  data = dataset)
+  m21<-glm.nb(y~log(maxvol)+site*long_dry,  data = dataset)
+  m22<-glm.nb(y~log(maxvol)+site*last_wet,  data = dataset)
+  print(aicset<-model.sel(m0, m1, m2, m3, m4, m5, m6,  m17,m18,m19,m20,m21,m22))
+}
+
 
 aic.hydro.nb.pure<-function(y, dataset)
 {

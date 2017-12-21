@@ -10,7 +10,7 @@ library(gridExtra)
 
 # load data ---------------------------------------------------------------
 
-figure_data <- readRDS("figure/data/figure04_summary_list.rds")
+figure_data <- read_rds("figure/data/figure04_summary_list.rds")
 
 # general theme for ggplot2 -----------------------------------------------
 
@@ -45,14 +45,17 @@ fig3_panelA <- ggplot(data = figure_data$aic.percent, mapping = aes(x = response
   geom_bar(colour = "black", stat = "identity", size = 0.3, width = 0.6) +
   scale_y_continuous(name = "Effect of rainfall",
                      limits = c(-0.03, 0.19), breaks = seq(0, 0.2, 0.05), expand = c(0,0)) +
-  scale_x_discrete("") +
+  scale_x_discrete("", labels = c(expression(paste("", CO[2]," concentration")), 
+                                  "Decomposition", "Nitrogen uptake", 
+                                  "Bacterial density", "Total invertebrates", "Engulfer", "Piercer", 
+                                  "Shredder", "Gatherer", "Scraper", "Filter feeder")) +
   scale_fill_manual(values = c("purple3", "gold1", "white")) +
   general_theme +
   theme(axis.line.y = element_blank(),
         axis.ticks.y = element_blank(),
         legend.position = "none",
-        plot.margin = unit(c(1,4,1,-1), "lines"),
-        axis.text.y = element_text(face = 2)) +
+        plot.margin = margin(t = 5.5, r = -5, b = 5.5, l = 20, unit = "pt"),
+        axis.text.y = element_text(face = "bold")) +
   annotate(geom = "segment", x = 3.5, xend = 3.5, y = -0.03, yend = 0.16, colour = "black", linetype = 2) +
   annotate(geom = "segment", x = 5.5, xend = 5.5, y = -0.03, yend = 0.16, colour = "black", linetype = 2) +
   coord_flip() +
@@ -71,7 +74,7 @@ fig3_panelB <- ggplot(data = figure_data$aic.percent, mapping = aes(x = response
   theme(axis.line.y = element_blank(),
         axis.ticks.y = element_blank(),
         legend.position = "none",
-        plot.margin = unit(c(1,1,1,-4), "lines"),
+        plot.margin = margin(t = 5.5, r = 20, b = 3.5, l = -5, unit = "pt"),
         axis.text.y = element_blank()) + #element_text(face = 2)
   annotate(geom = "segment", x = 3.5, xend = 3.5, y = -0.03, yend = 0.3, colour = "black", linetype = 2) +
   annotate(geom = "segment", x = 5.5, xend = 5.5, y = -0.03, yend = 0.3, colour = "black", linetype = 2) +
@@ -90,6 +93,7 @@ fig3_panelB
 
 gt <- ggplot_gtable(ggplot_build(fig3_panelB))
 gt$layout$clip[gt$layout$name=="panel"] <- "off"
+grid.arrange(arrangeGrob(grobs = list(fig3_panelA, gt), ncol = 2, nrow = 1))
 
 # saving figure -----------------------------------------------------------
 

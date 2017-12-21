@@ -154,6 +154,7 @@ nocadata<-subset(fulldata,site!="cardoso")
 nocadata$resid.driedout<-resid(glm(sqrt(prop.driedout.days)~maxvol+site*log(mu.scalar)*log(k.scalar), family=gaussian, data=nocadata))
 nocadata$resid.overflow<-resid(glm(sqrt(prop.overflow.days)~maxvol+site*log(mu.scalar)*log(k.scalar), family=gaussian, data=nocadata))
 nocadata$resid.cvdepth<-resid(glm(log(cv.depth)~maxvol+site*log(mu.scalar)*log(k.scalar), family=gaussian, data=nocadata))
+nocadatatemp<-filter(nocadata, mean_temp%nin%NA)
 
 ardata<-subset(fulldata,site=="argentina")
 cadata<-subset(fulldata,site=="cardoso")

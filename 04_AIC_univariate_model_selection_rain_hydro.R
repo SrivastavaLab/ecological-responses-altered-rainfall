@@ -16,6 +16,10 @@ source("02_functions.R")
 
 #to calculate deviance explained, used best non-null rainfall 9or hydrology) model, even if ns.
 
+#model selection involving hydrology variables needed to omit cardoso (no measurements), and involving temperature also those bromeliads with no ibutton data
+#outlier tests suggested removal of a couple of bromeliads for a few variables
+
+
 response<-as.vector(c("Decomposition", "Nitrogen uptake", "CO2 flux", "Shredder", "Filter feeder", "Scraper", "Gatherer", "Engulfer", "Piercer", "Bacterial density", "Total Invertebrates"))
 aic.percent<-as.data.frame(response)
 
@@ -59,30 +63,6 @@ aic.percent$drainfalse[aic.percent$response=="Nitrogen uptake"]<-Dsquared(glm(re
 aic.percent$raintype[aic.percent$response=="Nitrogen uptake"]<-"contingent"
 
 
-#n15 - square root - rain - not as good a fit as eight root - not considered further here
-
-aic.lmx((no126data$n15.bromeliad.final+4)^0.5, gaussian, no126data)#m8 = site x mu
-aic.lmx.x((no126data$n15.bromeliad.final+4)^0.5, gaussian, no126data)#m22 different
-bestnit<-glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site*log(mu.scalar), family=gaussian, data = no126data)
-#k and k2 sig, but not in macae and french guiana
-absnit<-glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site+log(intended.mu), family=gaussian, data = no126data)
-anova(bestnit,absnit, test="LRT") #Deviance change -32.3, p = 0.00106*
-abs.check(bestnit,absnit)#absolute better !
-visreg(absnit, "intended.mu", by="site", ylab="Nitrogen uptake", xtrans=log, overlay=FALSE, partial=TRUE, rug=TRUE, band=FALSE)
-no126data$tribe<-"Tillansoidae"
-no126data$tribe[no126data$site=="argentina"]<-"Bromelioideae"
-no126data$tribe[no126data$site=="macae"]<-"Bromelioideae"
-no126data$tribe[no126data$site=="cardoso"]<-"Bromelioideae"
-no126data$tribe<-as.factor(no126data$tribe)
-absnit2<-glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site+tribe*(log(intended.k)+I(log(intended.k)^2)), family=gaussian, data = no126data)
-absnit3<-glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site+tribe*(log(intended.k)), family=gaussian, data = no126data)
-absnit4<-glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site+tribe+(log(intended.k)+I(log(intended.k)^2)), family=gaussian, data = no126data)
-print(aicset<-model.sel(absnit,absnit2, absnit3, absnit4))
-visreg(absnit2, "intended.k", by="tribe", ylab="Nitrogen uptake", xtrans=log, overlay=FALSE, partial=TRUE, rug=TRUE, band=FALSE)
-no126data$resid.nit<-resid(glm((n15.bromeliad.final+4)^0.5~log(maxvol)+site,data=no126data, na.action=na.exclude))
-aic.percent$draintrue[aic.percent$response=="Nitrogen uptake"]<-Dsquared(glm(resid.nit~site*(log(k.scalar)+I(log(k.scalar)^2)),family=gaussian, no126data), adjust=TRUE) #0.05186261
-aic.percent$drainfalse[aic.percent$response=="Nitrogen uptake"]<-Dsquared(glm(resid.nit~site*(log(k.scalar)+I(log(k.scalar)^2)),family=gaussian, no126data), adjust=FALSE) #0.05186261
-aic.percent$raintype[aic.percent$response=="Nitrogen uptake"]<-"contingent"
 
 #co2 - rain
 aic.lmx(log(nocaprdata$co2.final), gaussian, nocaprdata)#m0, m4, m1
@@ -119,6 +99,11 @@ nococr140data$resid.ff<-resid(glm.nb(round(filter.feeder_bio*100)~log(maxvol)+si
 aic.percent$draintrue[aic.percent$response=="Filter feeder"]<-Dsquared(glm(resid.ff~site*(log(mu.scalar)+I(log(mu.scalar)^2)),family=gaussian, nococr140data), adjust=TRUE) #0.1385931
 aic.percent$drainfalse[aic.percent$response=="Filter feeder"]<-Dsquared(glm(resid.ff~site*(log(mu.scalar)+I(log(mu.scalar)^2)),family=gaussian, nococr140data), adjust=FALSE) #0.1385931
 aic.percent$raintype[aic.percent$response=="Filter feeder"]<-"contingent"
+
+#strength of contingency
+Dsquared(glm(resid.ff~site*(log(mu.scalar)+I(log(mu.scalar)^2)),family=gaussian, nococr140data), adjust=FALSE) #total rainfall dsq is 22.6%
+Dsquared(glm(resid.ff~site+(log(mu.scalar)+I(log(mu.scalar)^2)),family=gaussian, nococr140data),adjust=FALSE) #ignoring interactio gives 10.1%
+0.1013384/0.2258979 #so 45% of total rainfall effect is main effect, leaving 55% is contingent
 
 #scraper - rain --------------
 aic.lmxnb(round(fulldata$scraper_bio*10), fulldata)#m8 = site x k+k2
@@ -254,8 +239,9 @@ no126data.noout<-filter(no126data, site_brom.id%nin%"argentina_15")%>%filter(sit
 aic.hydro((no126datatemp$n15.bromeliad.final+4)^0.125, (no126datatemp$n15.bromeliad.final+4)^0.125~log(no126datatemp$maxvol)+no126datatemp$site*(log(no126datatemp$k.scalar)+I(log(no126datatemp$k.scalar)^2)), gaussian, no126datatemp)
 #best is rain, then chng_mean_temp but this is not sig factor as seen here:
 onemodN2<-glm((n15.bromeliad.final+4)^0.125~log(maxvol)+site+change_mean_temp, family=gaussian, data = no126datatemp); Anova(onemodN2, type=2)#not sig
+#therefore, because of misleading effect of temp, used this model for rain vs hydro:
 aic.hydro.pure((no126data.noout$n15.bromeliad.final+4)^0.125, gaussian, no126data.noout) #best is m21 long_dry m19 site*prop.dry.dsys as temp not in candidate set
-bestmodN2<-glm((n15.bromeliad.final+4)^0.125~log(maxvol)+site*long_dry, family=gaussian, data = no126data.noout); Anova(bestmodN2, type=2)
+bestmodN2<-glm((n15.bromeliad.final+4)^0.125~log(maxvol)+site*prop.driedout.days, family=gaussian, data = no126data.noout); Anova(bestmodN2, type=2)
 #sig site x long dry interaction
 visreg(bestmodN2, "long_dry", by="site")#driven mainly by neg effect in argentina and macae vs tiny positive effect pr; other sites have hardly any variance in longest dry
 visreg(bestmodN2, "long_dry", by="site",ylab="Nitrogen uptake", overlay=FALSE, partial=TRUE, band=FALSE)
@@ -291,14 +277,13 @@ nococr140data.noout<-filter(nococr140data, site_brom.id%nin%"argentina_15")
 
 aic.hydro.nb(round(nococr140datatemp$filter.feeder_bio*100),round(nococr140datatemp$filter.feeder_bio*100)~log(nococr140datatemp$maxvol)+nococr140datatemp$site*(log(nococr140datatemp$mu.scalar)+I(log(nococr140datatemp$mu.scalar)^2)),nococr140datatemp)
 #best model is m17: cv.depth*site
-
-aic.hydro.nb.best("filter.feeder_bio", nococr140data.noout,100) #pure hydrology: cv.depth x site
-aic.hydro.nb.purex(round(nococr140data.noout$filter.feeder_bio*100), nococr140data.noout) #same, without max vol 
-# aic.hydro.nb(round(nococrleaky140datatemp$filter.feeder_bio*100),round(nococrleaky140datatemp$filter.feeder_bio*100)~log(nococrleaky140datatemp$maxvol)+nococrleaky140datatemp$site*(log(nococrleaky140datatemp$mu.scalar)+I(log(nococrleaky140datatemp$mu.scalar)^2)),nococrleaky140datatemp)
 aic.hydro(round(nococr140datatemp$filter.feeder_bio*100),round(nococr140datatemp$filter.feeder_bio*100)~log(nococr140datatemp$maxvol)+nococr140datatemp$site*(log(nococr140datatemp$mu.scalar)+I(log(nococr140datatemp$mu.scalar)^2)),family=negative.binomial(theta = 0.856),nococr140datatemp)
 #again m17 is best
+aic.hydro.nb.best("filter.feeder_bio", nococr140data.noout,100) #pure hydrology: cv.depth x site
+aic.hydro.nb.purex(round(nococr140data.noout$filter.feeder_bio*100), nococr140data.noout) #same, without max vol 
 bestmodff<-glm.nb(round(filter.feeder_bio*100)~log(maxvol)+site*cv.depth,  data = nococr140data.noout)
 par(mfrow=c(1,1)); visreg(bestmodff, "cv.depth", by="site", ylab="Filter feeder biomass", overlay=TRUE, partial=TRUE, band=FALSE)
+
 #interestingly, all three sites go down roughly the same rate, but macae is more resistent, there are still 2 bromeliads driving this after leaky issues fixed!
 #macae_B24, macae_B11 driving this pattern; they both seemed legit looking at depth data...
 Anova(bestmodff, type=3) #interaction sig
@@ -318,14 +303,22 @@ m2<-glm.nb(round(filter.feeder_bio*100)~log(maxvol)+site*(log(mu.scalar)+I(log(m
 m2a<-glm.nb(round(filter.feeder_bio*100)~log(maxvol)+site+(log(mu.scalar)+I(log(mu.scalar)^2)),  data = nococr140data.noout)
 anova(m2, m2a) #effect of rain x site interaction: df = 8, likehood ratio = 34.9, p =0.00003 
 
-
+#strength of contingency
+Dsquared(glm(resid.ff.hydro~site*cv.depth,family=gaussian, nococr140data.noout), adjust=FALSE) #total rainfall dsq is 31.6%
+Dsquared(glm(resid.ff.hydro~site+cv.depth,family=gaussian, nococr140data.noout), adjust=FALSE) #ignoring interactio gives 26.7%
+0.2671396/0.316197 #so 85% of total rainfall effect is main effect, only 15% is contingent
 
 #explored extensively other version of filter feeder hydro model, site x cv.depth still best (non-convergent models removed)
 
 
 #shredder - hydro -------------------
-aic.hydro.nb(round(nocadatatemp$shredder_bio*10), round(nocadatatemp$shredder_bio*10)~log(nocadatatemp$maxvol)+fulldatatemp$site+log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2), nocadatatemp)
+aic.hydro.nb(round(nocadatatemp$shredder_bio*10), round(nocadatatemp$shredder_bio*10)~log(nocadatatemp$maxvol)+nocadatatemp$site+log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2), nocadatatemp)
 aic.hydro(round(nocadatatemp$shredder_bio*10), round(nocadatatemp$shredder_bio*10)~log(nocadatatemp$maxvol)+nocadatatemp$site+log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2), family=negative.binomial(theta = 1.2108), nocadatatemp)
+aic.hydro(round(nocadatatemp$shredder_bio*10), round(nocadatatemp$shredder_bio*10)~log(nocadatatemp$maxvol)+nocadatatemp$site+log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2), family=negative.binomial(theta = 1.27), nocadatatemp)
+#because temperature was subsequently found to be nonsig, we switched to a no temp series of models for selection:
+aic.hydro.nb.notemp(round(nocadata$shredder_bio*10), round(nocadata$shredder_bio*10)~log(nocadata$maxvol)+nocadata$site+log(nocadata$k.scalar)+I(log(nocadata$k.scalar)^2), nocadata)
+aic.hydro.notemp(round(nocadata$shredder_bio*10), round(nocadata$shredder_bio*10)~log(nocadata$maxvol)+nocadata$site+log(nocadata$k.scalar)+I(log(nocadata$k.scalar)^2), family=negative.binomial(theta = 1.22), nocadata)
+
 aic.hydro.nb.best("shredder_bio", nocadata.noout,10) # site + proportion overflow best now
 aic.hydro.nb.purex(round(nocadata.noout$shredder_bio*10), nocadata.noout)#same, without mxvol
 #original rainfall model (m0) best
@@ -341,13 +334,12 @@ aic.percent$bestmodel[aic.percent$response=="Shredder"]<-"rain"
 
 #scraper - hydro -------------------
 
-aic.hydro.nb(round(nocadatatemp$scraper_bio*10), round(nocadatatemp$scraper_bio*10)~log(fulldatatemp$maxvol)+nocadatatemp$site*(log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2)), nocadatatemp)
-aic.hydro(round(nocadatatemp$scraper_bio*10), round(nocadatatemp$scraper_bio*10)~log(fulldatatemp$maxvol)+nocadatatemp$site*(log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2)), family=negative.binomial(theta = 1.338),nocadatatemp)
+aic.hydro.nb(round(nocadatatemp$scraper_bio*10), round(nocadatatemp$scraper_bio*10)~log(nocadatatemp$maxvol)+nocadatatemp$site*(log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2)), nocadatatemp)
+aic.hydro(round(nocadatatemp$scraper_bio*10), round(nocadatatemp$scraper_bio*10)~log(nocadatatemp$maxvol)+nocadatatemp$site*(log(nocadatatemp$k.scalar)+I(log(nocadatatemp$k.scalar)^2)), family=negative.binomial(theta = 1.338),nocadatatemp)
 # m19 (site*prop.driedout.days) m5  (long_dry)
 aic.hydro.nb.best("scraper_bio", nocadata.noout,10)#site x propdriedoutdays
 aic.hydro.nb.purex(round(nocadata.noout$scraper_bio*10), nocadata.noout)#same
-#aic.hydro.nb(round(noleakydatatemp$scraper_bio*10), round(noleakydatatemp$scraper_bio*10)~log(noleakydatatemp$maxvol)+noleakydatatemp$site*(log(noleakydatatemp$k.scalar)+I(log(noleakydatatemp$k.scalar)^2)), noleakydatatemp)
-#but if remove "leaky" data, then m5 (site+long_dry) is best and only model, still with new leaky
+
 bestmodsc<-glm.nb(round(scraper_bio*10)~log(maxvol)+site*prop.driedout.days,  data = nocadata.noout); Anova(bestmodsc, type=2)
 visreg(bestmodsc, "prop.driedout.days", by="site", ylab="Scraper biomass", overlay=TRUE, partial=TRUE, band=FALSE)
 nextmodsc<-glm.nb(round(scraper_bio*10)~log(maxvol)+site+long_dry,  data = nocadata.noout); Anova(nextmodsc, type=2)
@@ -367,10 +359,6 @@ no67185datatemp<-filter(no67185data, mean_temp%nin%NA)%>%filter(cv_mean_temp%nin
   filter(cv.depth%nin%NA)%>%filter(long_dry%nin%NA)%>%filter(last_wet%nin%NA)%>%
   filter(prop.overflow.days%nin%NA)%>%filter(prop.driedout.days%nin%NA)
 no67185data.noout<-filter(no67185data, site_brom.id%nin%"argentina_15")
-#no67185leakydatatemp<-filter(no67185data, mean_temp%nin%NA)%>%filter(cv_mean_temp%nin%NA)%>%
-#filter(cv.depth%nin%NA)%>%filter(long_dry%nin%NA)%>%filter(last_wet%nin%NA)%>%
-#filter(prop.overflow.days%nin%NA)%>%filter(prop.driedout.days%nin%NA)%>%
-#filter(site_brom.id%nin%c("macae_B24", "macae_B22", "macae_B9", "macae_B2", "macae_B11", "macae_B41", "argentina_15"))
 
 aic.hydro.nb(round(no67185datatemp$gatherer_bio*10), round(no67185datatemp$gatherer_bio*10)~log(no67185datatemp$maxvol)+no67185datatemp$site*(I(log(no67185datatemp$k.scalar)^2)), no67185datatemp)
 aic.hydro(round(no67185datatemp$gatherer_bio*10), round(no67185datatemp$gatherer_bio*10)~log(no67185datatemp$maxvol)+no67185datatemp$site*(I(log(no67185datatemp$k.scalar)^2)), family=negative.binomial(theta = 1.0889),no67185datatemp)
@@ -395,7 +383,7 @@ noargco13datatemp<-filter(noargco13data, mean_temp%nin%NA)%>%filter(cv_mean_temp
   filter(prop.overflow.days%nin%NA)%>%filter(prop.driedout.days%nin%NA)
 noargco13data.noout<-filter(noargco13data, site_brom.id%nin%"argentina_15")
 aic.hydro.nb(round(noargco13datatemp$engulfer_bio*100), round(noargco13datatemp$engulfer_bio*100)~log(noargco13datatemp$maxvol)+noargco13datatemp$site, noargco13datatemp)
-aic.hydro(round(noargco13datatemp$engulfer_bio*100), round(noargco13datatemp$engulfer_bio*100)~log(noargco13datatemp$maxvol)+noargco13datatemp$site, family=negative.binomial(theta = 0.3398),noargco13datatemp)
+
 aic.hydro.nb.best("engulfer_bio", noargco13data.noout,100)#m4
 aic.hydro.nb.purex(round(noargco13data.noout$engulfer_bio*10), noargco13data.noout)#similar positive effect of mean depth when volume omitted
 #m0 m4 (mean depth) m8 m24 m3
@@ -421,6 +409,7 @@ nococrprdata.noout<-filter(nococrprdata, site_brom.id%nin%"argentina_15")
 
 aic.hydro.nb(round(nococrprdatatemp$piercer_bio*10), round(nococrprdatatemp$piercer_bio*10)~log(nococrprdatatemp$maxvol)+nococrprdatatemp$site*(log(nococrprdatatemp$k.scalar)+I(log(k.scalar)^2)), nococrprdatatemp)
 aic.hydro(round(nococrprdatatemp$piercer_bio*10), round(nococrprdatatemp$piercer_bio*10)~log(nococrprdatatemp$maxvol)+nococrprdatatemp$site*(log(nococrprdatatemp$k.scalar)+I(log(k.scalar)^2)), family=negative.binomial(theta = 0.3292),nococrprdatatemp)
+
 aic.hydro.nb.best("piercer_bio", nococrprdata.noout,10)#overflow x site
 aic.hydro.nb.purex(round(nococrprdata.noout$piercer_bio*10), nococrprdata.noout)
 #m18 note only 3 sites
@@ -442,11 +431,13 @@ noargco123datatemp<-filter(noargco123data, mean_temp%nin%NA)%>%filter(cv_mean_te
 noargco123data.noout<-filter(noargco123data, site_brom.id%nin%"argentina_15")
 aic.hydro.nb(round(noargco123datatemp$bacteria.per.nl.final*100), round(noargco123datatemp$bacteria.per.nl.final*100)~log(noargco123datatemp$maxvol)+noargco123datatemp$site+(log(noargco123datatemp$mu.scalar)), noargco123datatemp)
 aic.hydro(round(noargco123datatemp$bacteria.per.nl.final*100), round(noargco123datatemp$bacteria.per.nl.final*100)~log(noargco123datatemp$maxvol)+noargco123datatemp$site+(log(noargco123datatemp$mu.scalar)), family=negative.binomial(theta = 2.5895),noargco123datatemp)
+
 aic.hydro.nb.best("bacteria.per.nl.final", noargco123data.noout,100)#last wet
 #m0 m6 (last_wet)
 bestmodba<-glm.nb(round(bacteria.per.nl.final*100)~log(maxvol)+site+log(mu.scalar),  data = noargco123data.noout)
 hydroba<-glm.nb(round(bacteria.per.nl.final*100)~log(maxvol)+site+last_wet,  data = noargco123data.noout); Anova(hydroba, type=2)
 # so best hydro model is not sig
+#therefore, use null model for best hydro when competing with best rain, refer to bacteria rain aic tables
 noargco123data.noout$resid.ba.hydro<-resid(glm.nb(round(piercer_bio*10)~log(maxvol)+site,data=noargco123data.noout, na.action=na.exclude))
 aic.percent$dhydrotrue[aic.percent$response=="Bacterial density"]<-Dsquared(glm(resid.ba.hydro~last_wet,family=gaussian, noargco123data.noout), adjust=TRUE) #0.0742
 aic.percent$dhydrofalse[aic.percent$response=="Bacterial density"]<-Dsquared(glm(resid.ba.hydro~last_wet,family=gaussian, noargco123data.noout), adjust=FALSE) #0.0742
@@ -454,13 +445,14 @@ aic.percent$hydrotype[aic.percent$response=="Bacterial density"]<-"ns"
 aic.percent$bestmodel[aic.percent$response=="Bacterial density"]<-"rain"
 
 #totalbio - hydro
-
+fulldatatemp<-temphydrotruedata
 fulldatatemp.noout<-filter(fulldatatemp, site_brom.id%nin%"argentina_15")
+fulldata.noout<-filter(fulldata, site_brom.id%nin%"argentina_15")
 aic.hydro.nb(round(fulldatatemp.noout$totalbio*10), round(fulldatatemp.noout$totalbio*10)~log(fulldatatemp.noout$maxvol)+fulldatatemp.noout$site, fulldatatemp.noout)
-aic.hydro(round(fulldatatemp.noout$totalbio*10), round(fulldatatemp.noout$totalbio*10)~log(fulldatatemp.noout$maxvol)+fulldatatemp.noout$site, family=negative.binomial(theta = 2.53), fulldatatemp)
+aic.hydro(round(fulldatatemp.noout$totalbio*10), round(fulldatatemp.noout$totalbio*10)~log(fulldatatemp.noout$maxvol)+fulldatatemp.noout$site, family=negative.binomial(theta = 2.53), fulldatatemp.noout)
 #m0 m8 m18 m5 m6 m1 m3
 #+change mean   *prop.overflow
-aic.hydro.nb.best("totalbio", nocadata.noout,10)#prop overflow
+aic.hydro.nb.best("totalbio", nocadata.noout,10)#prop overflow  ...because the best rain model was the null, we used this model selection for rain vs hydro
 besttb<-glm.nb(round(totalbio*10)~log(maxvol)+site,  data = nocadata.noout)
 bestmodtb<-glm.nb(round(totalbio*10)~log(maxvol)+site,  data = nocadata.noout)
 hydrotb<-glm.nb(round(totalbio*10)~log(maxvol)+site*prop.overflow.days,  data = nocadata.noout); Anova(hydrotb, type=2) #sig
