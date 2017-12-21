@@ -1,5 +1,0 @@
-               Df ChiSquare       F Pr(>F)    
-change.k        1   0.00244  0.6397  0.776    
-site            6   0.57850 25.2681  0.001 ***
-change.k:site   6   0.06879  3.0049  0.012 *  
-Residual      196   0.74788 
