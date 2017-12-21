@@ -77,8 +77,6 @@ site_names <- c(
 original_data_params_name <- original_data_parameters %>% 
   mutate(site_capital = site_names[site])
 
-png(file = "ExperimentalSetup.png", units = "px", width = 7780, height=7380, res=1440)
-
 site_treatment_data <- fulldata %>% 
   dplyr::select(intended.mu, intended.k, site) %>% 
   mutate(site = ordered(site, levels = c("argentina", "macae", "frenchguiana",
@@ -109,13 +107,23 @@ plot1<-ggplot(data=fulldata, aes(x=intended.mu, y=intended.k, fill=site))+
     theme(panel.background = element_rect(fill = "white", colour = "grey50"))+
     labs(x = expression(paste("Mean daily rainfall, ",mu, " (mm)")), y = "Rainfall dispersion, k")
 
-plot1
 
+png(file = "figure/ExperimentalSetup.png", units = "px", width = 7780, height=7380, res=1440)
 
-expression(paste("Sampled values, ", mu, "=5, ", sigma,
-                 "=1"))
+plot1 
 
 dev.off()
+
+
+# Printing out.. with different colours
+
+png(file = "figure/ExperimentalSetup_brewer.png", units = "px", width = 7780, height=7380, res=1440)
+
+plot1 + 
+  scale_color_brewer(type ="qual", palette = 2)
+
+dev.off()
+
 
 
 #Appendix plot
